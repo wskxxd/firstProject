@@ -93,11 +93,13 @@ vector<KeyPoint> perspectiveT1(string str_tarPic, string str_objPic, string str_
 	sift_match(tar_description, obj_description, matches_tar_obj);
 	sift_match(obj_description, ref_description, matches_obj_ref);
 
-	// 剔除当前匹配的点
 
 	vector<DMatch> perspectiveT(Mat& tar, Mat& ref, vector<KeyPoint>& tar_keypoints, vector<KeyPoint>& ref_keypoints, vector<DMatch>& matches_tar_obj, vector<DMatch>& matches_obj_ref, string str_txt_path,
 		string str_exe_path);
 	vector<DMatch> matches = perspectiveT(tar, ref, tar_keypoints, ref_keypoints, matches_tar_obj, matches_obj_ref, str_txt_path, str_exe_path);
+	
+	
+	// 剔除当前匹配的点
 	if (matches.size() != 0)
 	{
 		vector<KeyPoint> remKeypoints = removePoints(matches, tar_keypoints);
@@ -105,6 +107,65 @@ vector<KeyPoint> perspectiveT1(string str_tarPic, string str_objPic, string str_
 	}
 	else
 		return tar_keypoints;
+}
+
+void get_remainder_tar_keypoints(string& str_tarPic, vector<string>& str_objPic, vector<string>& str_refPic, vector<KeyPoint>& tar_keypoints)
+{
+	cout << "剔除物体匹配点前，目标图像特征点个数：" << tar_keypoints.size() << endl;
+	void sift_match(Mat& description1, Mat& description2, vector<DMatch>& good_matches);
+	// 提取特征点
+	Mat tar = imread(str_tarPic);
+	Mat tar_description;
+	vector<vector<DMatch>> vec_matches_tar_obj;
+	vector<vector<DMatch>> vec_matches_obj_ref;
+	SiftFeatureDetector feature;
+	SiftDescriptorExtractor descript;
+	descript.compute(tar, tar_keypoints, tar_description);
+	for (int i = 0; i < str_objPic.size(); i++)
+	{
+		Mat ref = imread(str_refPic[i]);
+		Mat obj = imread(str_objPic[i]);
+		vector<KeyPoint> obj_keypoints, ref_keypoints;
+		feature.detect(obj, obj_keypoints);
+		feature.detect(ref, ref_keypoints);
+		Mat obj_description;
+		Mat ref_description;
+		descript.compute(obj, obj_keypoints, obj_description);
+		descript.compute(ref, ref_keypoints, ref_description);
+		vector<DMatch> matches_tar_obj;
+		vector<DMatch> matches_obj_ref;
+		sift_match(tar_description, obj_description, matches_tar_obj);
+		sift_match(obj_description, ref_description, matches_obj_ref);
+		vec_matches_tar_obj.push_back(matches_tar_obj);
+		vec_matches_obj_ref.push_back(matches_obj_ref);
+	}
+	// 进行剔除
+	vector<bool> removeFlag;
+	for (int i = 0; i < tar_keypoints.size(); i++)
+	{
+		removeFlag.push_back(0);
+	}
+	for (int i = 0; i < vec_matches_tar_obj.size();i++)
+	{
+		vector<DMatch> matches_tar_obj = vec_matches_tar_obj[i];
+		vector<DMatch> matches_obj_ref = vec_matches_obj_ref[i];
+		for (int p = 0; p < matches_tar_obj.size(); p++)
+		{
+			for (int q = 0; q < matches_obj_ref.size(); q++)
+			{
+				if (matches_tar_obj[p].trainIdx == matches_obj_ref[q].queryIdx)
+					removeFlag[matches_tar_obj[p].queryIdx] = 1;
+			}
+		}
+	}
+	vector<KeyPoint> re_tar_keypoints;
+	for (int i = 0; i < tar_keypoints.size(); i++)
+	{
+		if (!removeFlag[i])
+			re_tar_keypoints.push_back(tar_keypoints[i]);
+	}
+	tar_keypoints.swap(re_tar_keypoints);
+	cout << "剔除物体匹配点后，目标图像特征点个数：" << tar_keypoints.size() << endl;
 }
 
 vector<KeyPoint> perspectiveT2(string str_tarPic, string str_refPic, string str_txt_path,

@@ -95,6 +95,22 @@ void move(string path1,string path2)
 	}
 }
 
+void move2(string path1, string path2)
+{
+	for (int i = 0; i < num_HModelsForCoding; i++)
+	{
+		char num_str[4] = "";
+		_itoa_s(i, num_str, 4, 10);
+		string imagePath = path1 + "perspectiveImage" + num_str + ".jpg";
+		char Ref_num_str[4];
+		_itoa_s(perspectiveNum, Ref_num_str, 4, 10);
+		string outPath = path2 + "perspectiveImage" + Ref_num_str + ".jpg";
+		Mat I = imread(imagePath);
+		imwrite(outPath, I);
+		perspectiveNum++;
+	}
+}
+
 // 将图像补充至REF_NUM个（即将第一个文件复制）
 void add2REF_NUM(string path)
 {
@@ -176,6 +192,7 @@ int main(int argc, char *argv[])
 	string final_txt_path = vec[4];					// 最终输出数据目录
 	string ref_txt_path = vec[5];					// 参考关系的文件目录
 	string s = readRef(ref_txt_path, line);			// 本次编码的参考图像和目标图像的字符串
+	string perspectivePath = vec[6];
 
 	vector<string> objPath;							// 目标图像的物体路径
 	vector<string> refPicPath;						// 图像参考照片的路径
@@ -188,31 +205,33 @@ int main(int argc, char *argv[])
 
 	Mat tarImage = imread(str_tarPic);
 	SiftFeatureDetector feature;
-	vector<KeyPoint> remainder_tar_keypoints;
-	feature.detect(tarImage, remainder_tar_keypoints);
+	vector<KeyPoint> remainder_tar_keypoints,tar_keypoints;
+	feature.detect(tarImage, tar_keypoints);
+	remainder_tar_keypoints = tar_keypoints;
 
 	if (objPath.size()>0)
 	{
 		// 对目标图像切出的物体进行几何变形和光度转换
 		for (int i = 0; i < objPath.size(); i++)
 		{
-			// 对目标照片剩余特征点继续进行匹配，提取sift，几何变形、光度转换，每进行一次剔除一次匹配点，用剩余的匹配点和下次进行匹配
+			// 对目标照片剩余特征点继续进行匹配，提取sift，几何变形、光度转换
 			string str_objPic = objPath[i];
 			string str_refPic = refPicPath[i];
 
 			vector<KeyPoint> perspectiveT1(string str_tarPic, string str_objPic, string str_refPic, string str_txt_path,
 				string str_exe_path, vector<KeyPoint>& tar_keypoints);
-			vector<KeyPoint> remainder = perspectiveT1(str_tarPic, str_objPic, str_refPic, str_txt_path, str_exe_path, remainder_tar_keypoints);
-			if (remainder.size() == remainder_tar_keypoints.size())
-				break;
-			remainder_tar_keypoints = remainder;
+			vector<KeyPoint> remainder = perspectiveT1(str_tarPic, str_objPic, str_refPic, str_txt_path, str_exe_path, tar_keypoints);
+			move2(str_txt_path, perspectivePath);
 			void photometricTransformation(std::string originalImagePath, std::string rootPath, int targetImageNum);
 			photometricTransformation(originalImagePath, rootPath, targetImageNum);
 			move(rootPath + "PWW\\", final_txt_path);
-			if (remainder_tar_keypoints.size() == 0)
-				return 0;
 		}
+		// 剔除所有的物体匹配特征点
+		void get_remainder_tar_keypoints(string& str_tarPic, vector<string>& str_objPic, vector<string>& str_refPic, vector<KeyPoint>& tar_keypoints);
+		get_remainder_tar_keypoints(str_tarPic, objPath, refPicPath, remainder_tar_keypoints);
 	}
+
+
 	// 对剩余的特征点进行匹配然后进行几何变形和光度转换，每进行一次剔除一次匹配点，用剩余的匹配点进行下一次
 	for (int i = objPath.size(); i < refPicPath.size(); i++)
 	{
@@ -223,6 +242,7 @@ int main(int argc, char *argv[])
 		if (remainder.size() == remainder_tar_keypoints.size())
 			break;
 		remainder_tar_keypoints = remainder;
+		move2(str_txt_path, perspectivePath);
 		void photometricTransformation(std::string originalImagePath, std::string rootPath, int targetImageNum);
 		photometricTransformation(originalImagePath, rootPath, targetImageNum);
 		move(rootPath + "PWW\\", final_txt_path);
@@ -230,12 +250,13 @@ int main(int argc, char *argv[])
 			return 0;
 	}
 
-
+	/*
+	// 图像不足12张补足12张
 	if (Ref_num < REF_NUM)
 	{
 		add2REF_NUM(final_txt_path);
 	}
-
+	*/
 //	system("pause");
 	return 0;
 }
