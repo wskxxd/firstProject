@@ -10,6 +10,7 @@
 #include <features2d/features2d.hpp>
 #include <nonfree/nonfree.hpp>
 #include<opencv2/legacy/legacy.hpp>
+#include"include.h"
 using namespace cv;
 using namespace std;
 
@@ -19,9 +20,9 @@ int computeH(vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2, vector<
 {
 
 	// 如果匹配点数过少
-	if (matches.size() < 10)
+	if (matches.size() < MIN_SIFT_NUM)
 	{
-		cout << "匹配点少于10个，退出" << endl;
+		cout << "匹配点少于"<<MIN_SIFT_NUM<<"个，退出" << endl;
 		return -1;
 	}
 

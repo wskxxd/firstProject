@@ -15,7 +15,7 @@ const int Dis_h_threshold = 5;							// H模型匹配误差值阈值
 
 #define REF_NUM 12										// 控制参考最终产生的参考图像个数，不足12 的使用第0 张照片补足
 
-
+#define MIN_SIFT_NUM 20									// 最小的特征点数量
 
 
 #endif

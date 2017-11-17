@@ -20,6 +20,8 @@ using namespace std;
 	1、使用目标编码照片中的物体作为中间量，首先将目标照片和它切割出的物体进行匹配，然后使用该物体和对应参考照片匹配，通过物体作为中间值，找到目标图像和参考图像的匹配点
 	2、计算前num_HModelsForCoding个H模型，并对匹配点进行几何变形，光度转换
 
+	添加输出所有的几何变形和光度转换后的图像，需要在config.txt中指定输出文件的目录，并且在这个目录下必须包含输入参数行数的对应文件夹
+
 */
 
 // 切分字符串
@@ -192,7 +194,8 @@ int main(int argc, char *argv[])
 	string final_txt_path = vec[4];					// 最终输出数据目录
 	string ref_txt_path = vec[5];					// 参考关系的文件目录
 	string s = readRef(ref_txt_path, line);			// 本次编码的参考图像和目标图像的字符串
-	string perspectivePath = vec[6];
+	string perspectivePath = vec[6];				// 透视变换输出的文件目录
+
 
 	vector<string> objPath;							// 目标图像的物体路径
 	vector<string> refPicPath;						// 图像参考照片的路径
@@ -219,12 +222,12 @@ int main(int argc, char *argv[])
 			string str_refPic = refPicPath[i];
 
 			vector<KeyPoint> perspectiveT1(string str_tarPic, string str_objPic, string str_refPic, string str_txt_path,
-				string str_exe_path, vector<KeyPoint>& tar_keypoints);
+				string str_exe_path, vector<KeyPoint>& tar_keypoints);    
 			vector<KeyPoint> remainder = perspectiveT1(str_tarPic, str_objPic, str_refPic, str_txt_path, str_exe_path, tar_keypoints);
-			move2(str_txt_path, perspectivePath);
+			move2(str_txt_path, perspectivePath + to_string(line) + "\\");
 			void photometricTransformation(std::string originalImagePath, std::string rootPath, int targetImageNum);
 			photometricTransformation(originalImagePath, rootPath, targetImageNum);
-			move(rootPath + "PWW\\", final_txt_path);
+			move(rootPath + "PWW\\", final_txt_path + to_string(line) + "\\");
 		}
 		// 剔除所有的物体匹配特征点
 		void get_remainder_tar_keypoints(string& str_tarPic, vector<string>& str_objPic, vector<string>& str_refPic, vector<KeyPoint>& tar_keypoints);
@@ -242,10 +245,10 @@ int main(int argc, char *argv[])
 		if (remainder.size() == remainder_tar_keypoints.size())
 			break;
 		remainder_tar_keypoints = remainder;
-		move2(str_txt_path, perspectivePath);
+		move2(str_txt_path, perspectivePath + to_string(line) + "\\");
 		void photometricTransformation(std::string originalImagePath, std::string rootPath, int targetImageNum);
 		photometricTransformation(originalImagePath, rootPath, targetImageNum);
-		move(rootPath + "PWW\\", final_txt_path);
+		move(rootPath + "PWW\\", final_txt_path + to_string(line) + "\\");
 		if (remainder_tar_keypoints.size() == 0)
 			return 0;
 	}

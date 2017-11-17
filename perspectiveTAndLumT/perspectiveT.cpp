@@ -291,6 +291,11 @@ vector<DMatch> perspectiveT(Mat& tar, Mat& ref, vector<KeyPoint>& tar_keypoints,
 	int computeH(vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2, vector<DMatch>& matches, string exe_path, string txt_path);
 	int t = computeH(tar_keypoints, ref_keypoints, matches_tar_ref, str_exe_path, str_txt_path);
 
+	if (t == -1){
+		cout << "没有H模型，不能计算" << endl;
+		return matches_tar_ref;
+	}
+	
 
 	// 利用H模型和平滑过滤，过滤sift匹配点
 	vector<DMatch> filter(vector< cv::DMatch >& good_matches, Mat& input1, Mat& input2, vector<cv::KeyPoint>& keypoints1, vector<cv::KeyPoint>& keypoints2);
@@ -299,18 +304,15 @@ vector<DMatch> perspectiveT(Mat& tar, Mat& ref, vector<KeyPoint>& tar_keypoints,
 	void h_filter(string finalHModelPath, vector<DMatch>& good_matches2, vector<cv::KeyPoint>& keypoints1, vector<cv::KeyPoint>& keypoints2,
 		vector<DMatch>& good_matches3);
 	vector<DMatch> matches;
-	if (t == -1){
-		cout << "没有H模型，不能计算" << endl;
-		return matches;
-	}
+	
 	h_filter(str_txt_path + "finalHModels.txt", matches_tar_ref, tar_keypoints, ref_keypoints, matches);
 	// 将剩余匹配点写入到对应TXT中
 	void writeTXT(vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2, vector<DMatch>& good_matches, string txt_path);
 	writeTXT(tar_keypoints, ref_keypoints, matches, str_txt_path);
-
+	
 
 	vector<vector<double>>  Hmodle;					// 读入的H模型
-	Hmodle.clear();					// 清空原来内容
+	Hmodle.clear();									// 清空原来内容
 	readHTxt(str_txt_path + "finalHModels.txt", Hmodle, num_HModelsForCoding);
 	cout << "H模型个数:" << Hmodle.size() << "   " << Hmodle.size() / 3 << endl;
 	// H模型数小于指定H模型,将第一个H模型复制到后边
